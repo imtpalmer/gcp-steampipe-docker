@@ -14,19 +14,22 @@ RUN apt-get update && \
 # Downloading gcloud package
 RUN curl https://dl.google.com/dl/cloudsdk/release/google-cloud-sdk.tar.gz > /tmp/google-cloud-sdk.tar.gz
 
-# Installing the package
+# Install the GCP CLI
 RUN mkdir -p /usr/local/gcloud \
   && tar -C /usr/local/gcloud -xvf /tmp/google-cloud-sdk.tar.gz \
   && /usr/local/gcloud/google-cloud-sdk/install.sh
+RUN rm -rf /tmp/google-cloud-sdk.tar.gz 
 
-# Adding the package path to local
+# Add the gcloud cli to path 
 ENV PATH $PATH:/usr/local/gcloud/google-cloud-sdk/bin
 
-# install steampipe
+# Install steampipe
 RUN curl -fsSL https://raw.githubusercontent.com/turbot/steampipe/main/install.sh > /tmp/steampipe-install.sh
 RUN chmod 755 /tmp/steampipe-install.sh
 RUN /bin/sh -c /tmp/steampipe-install.sh
-CMD steampipe plugin install steampipe
+
+# download the GCP insights dashboard
+RUN git clone https://github.com/turbot/steampipe-mod-gcp-insights.git 
 
 # Set up non-root user
 ARG USERNAME=vscode
@@ -40,3 +43,11 @@ RUN groupadd --gid $USER_GID $USERNAME && \
     chmod 0440 /etc/sudoers.d/$USERNAME
 
 USER $USERNAME
+ENV PATH $PATH:/usr/local/bin/steampipea
+
+# install plugins 
+RUN steampipe plugin install steampipe 
+RUN steampipe plugin install gcp
+
+RUN cd steampipe-mod-gcp-insights/
+CMD steampipe dashboard 
