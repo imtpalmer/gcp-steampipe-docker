@@ -27,9 +27,14 @@ ENV PATH $PATH:/usr/local/gcloud/google-cloud-sdk/bin
 RUN curl -fsSL https://raw.githubusercontent.com/turbot/steampipe/main/install.sh > /tmp/steampipe-install.sh
 RUN chmod 755 /tmp/steampipe-install.sh
 RUN /bin/sh -c /tmp/steampipe-install.sh
+RUN rm -rf /tmp/steampipe-install.sh
+
+# WORKDIR /workspaces/gcp-steampipe-docker
 
 # download the GCP insights dashboard
 RUN git clone https://github.com/turbot/steampipe-mod-gcp-insights.git 
+RUN git clone https://github.com/turbot/steampipe-mod-gcp-compliance.git
+RUN git clone https://github.com/turbot/steampipe-mod-gcp-labels.git
 
 # Set up non-root user
 ARG USERNAME=vscode
@@ -43,7 +48,13 @@ RUN groupadd --gid $USER_GID $USERNAME && \
     chmod 0440 /etc/sudoers.d/$USERNAME
 
 USER $USERNAME
-ENV PATH $PATH:/usr/local/bin/steampipea
+ENV PATH $PATH:/usr/local/bin/steampipe
+WORKDIR /workspaces/gcp-steampipe-docker
+
+# download the GCP insights dashboard
+RUN git clone https://github.com/turbot/steampipe-mod-gcp-insights.git 
+RUN git clone https://github.com/turbot/steampipe-mod-gcp-compliance.git
+RUN git clone https://github.com/turbot/steampipe-mod-gcp-labels.git
 
 # install plugins 
 RUN steampipe plugin install steampipe 
